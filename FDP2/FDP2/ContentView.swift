@@ -113,8 +113,6 @@ struct ContentView: View {
     @StateObject private var calendarManager = CalendarManager()
     @AppStorage("selectedCalendarID") private var selectedCalendarID: String = ""
     @State private var reminderStatus: String = ""
-    @State private var showCustomTableEditor = false
-    @State private var showFileImporter = false
     
     var calculatedFDP: Int {
         // EASA FDP Table in minutes for 1-2 to 10 sectors (indices 0...9)
