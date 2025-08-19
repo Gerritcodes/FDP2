@@ -113,6 +113,8 @@ struct ContentView: View {
     @StateObject private var calendarManager = CalendarManager()
     @AppStorage("selectedCalendarID") private var selectedCalendarID: String = ""
     @State private var reminderStatus: String = ""
+    @State private var showCustomTableEditor = false
+    @State private var showFileImporter = false
     
     var calculatedFDP: Int {
         // EASA FDP Table in minutes for 1-2 to 10 sectors (indices 0...9)
@@ -457,167 +459,91 @@ struct ContentView: View {
                     .ignoresSafeArea()
                 
                 ScrollView {
-                    VStack(spacing: 24) {
-                        // Header Section
-                        VStack(spacing: 16) {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 6) {
-                                    Text("FDP Calculator")
-                                        .font(.system(.largeTitle, design: .rounded, weight: .bold))
-                                        .foregroundStyle(
-                                            LinearGradient(
-                                                colors: [.white, .white.opacity(0.9)],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
+                    VStack(spacing: 16) {
+                        // Compact Header
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("FDP Calculator")
+                                    .font(.system(.title, design: .rounded, weight: .bold))
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            colors: [.white, .white.opacity(0.9)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                Text("Flight Duty Period")
+                                    .font(.system(.caption, design: .rounded, weight: .medium))
+                                    .foregroundColor(.white.opacity(0.85))
+                            }
+                            Spacer()
+                            Button(action: {}) {
+                                Image(systemName: "gearshape.fill")
+                                    .font(.title3)
+                                    .foregroundColor(.white)
+                                    .frame(width: 36, height: 36)
+                                    .background(
+                                        LinearGradient(
+                                            colors: [.white.opacity(0.25), .white.opacity(0.15)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .overlay(
+                                        Circle()
+                                            .stroke(
+                                                LinearGradient(
+                                                    colors: [.white.opacity(0.4), .white.opacity(0.1)],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
+                                                ),
+                                                lineWidth: 1
                                             )
-                                        )
-                                    Text("Flight Duty Period")
-                                        .font(.system(.subheadline, design: .rounded, weight: .medium))
-                                        .foregroundColor(.white.opacity(0.85))
-                                }
-                                Spacer()
-                                Button(action: {}) {
-                                    Image(systemName: "gearshape.fill")
-                                        .font(.title2)
-                                        .foregroundColor(.white)
-                                        .frame(width: 48, height: 48)
-                                        .background(
-                                            LinearGradient(
-                                                colors: [.white.opacity(0.25), .white.opacity(0.15)],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
-                                        .overlay(
-                                            Circle()
-                                                .stroke(
-                                                    LinearGradient(
-                                                        colors: [.white.opacity(0.4), .white.opacity(0.1)],
-                                                        startPoint: .topLeading,
-                                                        endPoint: .bottomTrailing
-                                                    ),
-                                                    lineWidth: 1
-                                                )
-                                        )
-                                        .clipShape(Circle())
-                                        .shadow(
-                                            color: .black.opacity(0.2),
-                                            radius: 8,
-                                            x: 0,
-                                            y: 4
-                                        )
-                                }
+                                    )
+                                    .clipShape(Circle())
                             }
                         }
                         .padding(.horizontal, 20)
                         .padding(.top, 10)
                         
-                        // Main Content
-                        VStack(spacing: 20) {
-                            // Calendar Integration Card
-                            if !calendarManager.accessGranted {
-                                FDPCard {
-                                    VStack(alignment: .leading, spacing: 16) {
-                                        HStack {
-                                            FDPIcon("calendar.badge.plus", color: FDPDesignSystem.primary, size: 24)
-                                            Text("Calendar Integration")
-                                                .font(.system(.headline, design: .rounded, weight: .semibold))
-                                                .foregroundColor(FDPDesignSystem.textPrimary)
-                                        }
-                                        
-                                        Text("Connect your calendar to automatically find check-in events and set report times.")
-                                            .font(.system(.body, design: .rounded))
-                                            .foregroundColor(FDPDesignSystem.textSecondary)
-                                        
-                                        Button("Connect Calendar") {
-                                            calendarManager.requestAccess()
-                                        }
-                                        .primaryButtonStyle()
-                                    }
-                                }
-                            } else {
-                                FDPCard {
-                                    VStack(alignment: .leading, spacing: 16) {
-                                        HStack {
-                                            FDPIcon("calendar", color: FDPDesignSystem.primary, size: 24)
-                                            Text("Calendar")
-                                                .font(.system(.headline, design: .rounded, weight: .semibold))
-                                                .foregroundColor(FDPDesignSystem.textPrimary)
-                                        }
-                                        
-                                        Picker("Calendar", selection: Binding(
-                                            get: { selectedCalendarID },
-                                            set: { newValue in
-                                                selectedCalendarID = newValue
-                                                let id: String? = newValue.isEmpty ? nil : newValue
-                                                calendarManager.findNextCheckIn(in: id)
-                                            }
-                                        )) {
-                                            Text("All Calendars").tag("")
-                                            ForEach(calendarManager.calendars, id: \.calendarIdentifier) { cal in
-                                                Text(cal.title).tag(cal.calendarIdentifier)
-                                            }
-                                        }
-                                        .pickerStyle(MenuPickerStyle())
-                                        .accentColor(FDPDesignSystem.primary)
-
-                                        if let ev = calendarManager.nextCheckIn {
-                                            VStack(alignment: .leading, spacing: 8) {
-                                                Text("Next Check‑In")
-                                                    .font(.system(.subheadline, design: .rounded, weight: .medium))
-                                                    .foregroundColor(FDPDesignSystem.textSecondary)
-                                                Text("\(formattedDate(date: ev.startDate)) • \(ev.title)")
-                                                    .font(.system(.body, design: .rounded, weight: .semibold))
-                                                    .foregroundColor(FDPDesignSystem.textPrimary)
-                                                Button("Use as Report Time") {
-                                                    reportTime = ev.startDate
-                                                }
-                                                .primaryButtonStyle()
-                                            }
-                                        } else if !calendarManager.statusMessage.isEmpty {
-                                            Text(calendarManager.statusMessage)
-                                                .font(.system(.caption, design: .rounded))
-                                                .foregroundColor(FDPDesignSystem.textSecondary)
-                                        } else {
-                                            Button("Find Next Check‑In") {
-                                                let id: String? = selectedCalendarID.isEmpty ? nil : selectedCalendarID
-                                                calendarManager.findNextCheckIn(in: id)
-                                            }
-                                            .secondaryButtonStyle()
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            // Input Parameters Card
+                        // Compact Main Content - Everything in one view
+                        VStack(spacing: 16) {
+                            // Input Parameters Card - Compact
                             FDPCard {
-                                VStack(alignment: .leading, spacing: 20) {
+                                VStack(spacing: 16) {
+                                    // Header
                                     HStack {
-                                        FDPIcon("clock.fill", color: FDPDesignSystem.primary, size: 24)
+                                        FDPIcon("clock.fill", color: FDPDesignSystem.primary, size: 20)
                                         Text("Flight Parameters")
                                             .font(.system(.headline, design: .rounded, weight: .semibold))
                                             .foregroundColor(FDPDesignSystem.textPrimary)
+                                        Spacer()
                                     }
                                     
-                                    VStack(spacing: 16) {
+                                    // Compact Input Grid
+                                    LazyVGrid(columns: [
+                                        GridItem(.flexible()),
+                                        GridItem(.flexible())
+                                    ], spacing: 12) {
                                         // Report Time
-                                        VStack(alignment: .leading, spacing: 8) {
+                                        VStack(alignment: .leading, spacing: 4) {
                                             Text("Report Time")
-                                                .font(.system(.subheadline, design: .rounded, weight: .medium))
+                                                .font(.system(.caption, design: .rounded, weight: .medium))
                                                 .foregroundColor(FDPDesignSystem.textSecondary)
                                             DatePicker("", selection: $reportTime, displayedComponents: .hourAndMinute)
                                                 .datePickerStyle(CompactDatePickerStyle())
                                                 .accentColor(FDPDesignSystem.primary)
+                                                .scaleEffect(0.9)
                                         }
                                         
                                         // Sectors
-                                        VStack(alignment: .leading, spacing: 8) {
-                                            Text("Number of Sectors")
-                                                .font(.system(.subheadline, design: .rounded, weight: .medium))
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("Sectors")
+                                                .font(.system(.caption, design: .rounded, weight: .medium))
                                                 .foregroundColor(FDPDesignSystem.textSecondary)
                                             HStack {
                                                 Text("\(sectors)")
-                                                    .font(.system(.title2, design: .rounded, weight: .bold))
+                                                    .font(.system(.title3, design: .rounded, weight: .bold))
                                                     .foregroundStyle(
                                                         LinearGradient(
                                                             colors: [FDPDesignSystem.accent, FDPDesignSystem.accent.opacity(0.8)],
@@ -629,9 +555,10 @@ struct ContentView: View {
                                                 Stepper("", value: $sectors, in: 1...10)
                                                     .labelsHidden()
                                                     .accentColor(FDPDesignSystem.accent)
+                                                    .scaleEffect(0.8)
                                             }
-                                            .padding(.horizontal, 20)
-                                            .padding(.vertical, 16)
+                                            .padding(.horizontal, 12)
+                                            .padding(.vertical, 8)
                                             .background(
                                                 LinearGradient(
                                                     colors: [FDPDesignSystem.background, FDPDesignSystem.background.opacity(0.8)],
@@ -639,24 +566,13 @@ struct ContentView: View {
                                                     endPoint: .bottomTrailing
                                                 )
                                             )
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 16)
-                                                    .stroke(
-                                                        LinearGradient(
-                                                            colors: [FDPDesignSystem.accent.opacity(0.3), FDPDesignSystem.accent.opacity(0.1)],
-                                                            startPoint: .topLeading,
-                                                            endPoint: .bottomTrailing
-                                                        ),
-                                                        lineWidth: 1
-                                                    )
-                                            )
-                                            .cornerRadius(16)
+                                            .cornerRadius(10)
                                         }
                                         
                                         // FDP Table Source
-                                        VStack(alignment: .leading, spacing: 8) {
-                                            Text("FDP Table Source")
-                                                .font(.system(.subheadline, design: .rounded, weight: .medium))
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("FDP Table")
+                                                .font(.system(.caption, design: .rounded, weight: .medium))
                                                 .foregroundColor(FDPDesignSystem.textSecondary)
                                             Picker("FDP Table", selection: $selectedTableSource) {
                                                 Text("EASA").tag("EASA")
@@ -664,225 +580,184 @@ struct ContentView: View {
                                             }
                                             .pickerStyle(SegmentedPickerStyle())
                                             .accentColor(FDPDesignSystem.primary)
+                                            .scaleEffect(0.9)
                                         }
                                         
-                                        if selectedTableSource == "Custom" {
-                                            VStack(alignment: .leading, spacing: 12) {
-                                                Text("Custom FDP Table")
-                                                    .font(.system(.subheadline, design: .rounded, weight: .medium))
-                                                    .foregroundColor(FDPDesignSystem.textSecondary)
-                                                
-                                                Text("Import JSON format: [{\"range\":\"300-359\",\"fdp\":[...]}] or [{\"timeBand\":\"05:00 - 05:59\",\"fdp\":[...]}]")
-                                                    .font(.system(.caption, design: .rounded))
-                                                    .foregroundColor(FDPDesignSystem.textSecondary)
-                                                    .padding(.horizontal, 12)
-                                                    .padding(.vertical, 8)
-                                                    .background(FDPDesignSystem.background)
-                                                    .cornerRadius(8)
-                                                
-                                                HStack(spacing: 12) {
-                                                    Button("Edit Table") {
-                                                        showCustomTableEditor = true
-                                                    }
-                                                    .secondaryButtonStyle()
-                                                    
-                                                    Button("Import File") {
-                                                        showFileImporter = true
-                                                    }
-                                                    .secondaryButtonStyle()
-                                                }
-                                                
-                                                if !customTableStatusMessage.isEmpty {
-                                                    HStack {
-                                                        Image(systemName: customTableStatusOK ? "checkmark.circle.fill" : "xmark.circle.fill")
-                                                            .foregroundColor(customTableStatusOK ? FDPDesignSystem.success : FDPDesignSystem.danger)
-                                                        Text(customTableStatusMessage)
-                                                            .font(.system(.caption, design: .rounded))
-                                                            .foregroundColor(customTableStatusOK ? FDPDesignSystem.success : FDPDesignSystem.danger)
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            // Advanced Options Card
-                            FDPCard {
-                                VStack(alignment: .leading, spacing: 16) {
-                                    HStack {
-                                        FDPIcon("slider.horizontal.3", color: FDPDesignSystem.primary, size: 24)
-                                        Text("Advanced Options")
-                                            .font(.system(.headline, design: .rounded, weight: .semibold))
-                                            .foregroundColor(FDPDesignSystem.textPrimary)
-                                        
-                                        Spacer()
-                                        
-                                        Button(action: { showAdvancedOptions.toggle() }) {
-                                            Image(systemName: showAdvancedOptions ? "chevron.up" : "chevron.down")
-                                                .font(.system(.body, design: .rounded, weight: .medium))
-                                                .foregroundColor(FDPDesignSystem.primary)
-                                                .frame(width: 32, height: 32)
-                                                .background(FDPDesignSystem.background)
-                                                .clipShape(Circle())
-                                        }
+                                                                                 // Calendar Integration (if needed)
+                                         if !calendarManager.accessGranted {
+                                             VStack(alignment: .leading, spacing: 4) {
+                                                 Text("Calendar")
+                                                     .font(.system(.caption, design: .rounded, weight: .medium))
+                                                     .foregroundColor(FDPDesignSystem.textSecondary)
+                                                 Button("Connect") {
+                                                     calendarManager.requestAccess()
+                                                 }
+                                                 .font(.system(.caption, design: .rounded, weight: .medium))
+                                                 .foregroundColor(FDPDesignSystem.accent)
+                                                 .padding(.horizontal, 12)
+                                                 .padding(.vertical, 6)
+                                                 .background(FDPDesignSystem.accent.opacity(0.1))
+                                                 .cornerRadius(8)
+                                             }
+                                         }
+                                         
+                                         // Custom Table (if selected)
+                                         if selectedTableSource == "Custom" {
+                                             VStack(alignment: .leading, spacing: 4) {
+                                                 Text("Custom Table")
+                                                     .font(.system(.caption, design: .rounded, weight: .medium))
+                                                     .foregroundColor(FDPDesignSystem.textSecondary)
+                                                 HStack(spacing: 8) {
+                                                     Button("Edit") {
+                                                         showCustomTableEditor = true
+                                                     }
+                                                     .font(.system(.caption, design: .rounded, weight: .medium))
+                                                     .foregroundColor(FDPDesignSystem.accent)
+                                                     .padding(.horizontal, 8)
+                                                     .padding(.vertical, 4)
+                                                     .background(FDPDesignSystem.accent.opacity(0.1))
+                                                     .cornerRadius(6)
+                                                     
+                                                     Button("Import") {
+                                                         showFileImporter = true
+                                                     }
+                                                     .font(.system(.caption, design: .rounded, weight: .medium))
+                                                     .foregroundColor(FDPDesignSystem.accent)
+                                                     .padding(.horizontal, 8)
+                                                     .padding(.vertical, 4)
+                                                     .background(FDPDesignSystem.accent.opacity(0.1))
+                                                     .cornerRadius(6)
+                                                 }
+                                             }
+                                         }
                                     }
                                     
-                                    if showAdvancedOptions {
-                                        VStack(spacing: 16) {
-                                            // Standby
-                                            VStack(alignment: .leading, spacing: 8) {
-                                                Toggle(isOn: $onStandby) {
-                                                    VStack(alignment: .leading, spacing: 2) {
-                                                        Text("On Standby")
-                                                            .font(.system(.body, design: .rounded, weight: .medium))
-                                                        Text("If on standby before duty")
-                                                            .font(.system(.caption, design: .rounded))
-                                                            .foregroundColor(FDPDesignSystem.textSecondary)
+                                    // Compact Advanced Options
+                                    VStack(spacing: 12) {
+                                        HStack {
+                                            Text("Advanced Options")
+                                                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                                                .foregroundColor(FDPDesignSystem.textPrimary)
+                                            Spacer()
+                                            Button(action: { showAdvancedOptions.toggle() }) {
+                                                Image(systemName: showAdvancedOptions ? "chevron.up" : "chevron.down")
+                                                    .font(.system(.caption, design: .rounded, weight: .medium))
+                                                    .foregroundColor(FDPDesignSystem.primary)
+                                                    .frame(width: 24, height: 24)
+                                                    .background(FDPDesignSystem.background)
+                                                    .clipShape(Circle())
+                                            }
+                                        }
+                                        
+                                        if showAdvancedOptions {
+                                            LazyVGrid(columns: [
+                                                GridItem(.flexible()),
+                                                GridItem(.flexible())
+                                            ], spacing: 8) {
+                                                // Standby
+                                                VStack(alignment: .leading, spacing: 4) {
+                                                    Toggle(isOn: $onStandby) {
+                                                        Text("Standby")
+                                                            .font(.system(.caption, design: .rounded, weight: .medium))
+                                                    }
+                                                    .toggleStyle(SwitchToggleStyle(tint: FDPDesignSystem.primary))
+                                                    .scaleEffect(0.9)
+                                                    
+                                                    if onStandby {
+                                                        DatePicker("Start", selection: $standbyStart, displayedComponents: .hourAndMinute)
+                                                            .datePickerStyle(CompactDatePickerStyle())
+                                                            .accentColor(FDPDesignSystem.primary)
+                                                            .scaleEffect(0.8)
                                                     }
                                                 }
-                                                .toggleStyle(SwitchToggleStyle(tint: FDPDesignSystem.primary))
                                                 
-                                                if onStandby {
-                                                    DatePicker("Standby Start", selection: $standbyStart, displayedComponents: .hourAndMinute)
-                                                        .datePickerStyle(CompactDatePickerStyle())
-                                                        .accentColor(FDPDesignSystem.primary)
-                                                }
-                                            }
-                                            
-                                            // Extended FDP
-                                            VStack(alignment: .leading, spacing: 8) {
-                                                Toggle(isOn: $extendedFDP) {
-                                                    VStack(alignment: .leading, spacing: 2) {
+                                                // Extended FDP
+                                                VStack(alignment: .leading, spacing: 4) {
+                                                    Toggle(isOn: $extendedFDP) {
                                                         Text("Extended FDP")
-                                                            .font(.system(.body, design: .rounded, weight: .medium))
-                                                        Text("Enable if published extension applies")
-                                                            .font(.system(.caption, design: .rounded))
-                                                            .foregroundColor(FDPDesignSystem.textSecondary)
+                                                            .font(.system(.caption, design: .rounded, weight: .medium))
                                                     }
+                                                    .toggleStyle(SwitchToggleStyle(tint: FDPDesignSystem.primary))
+                                                    .scaleEffect(0.9)
                                                 }
-                                                .toggleStyle(SwitchToggleStyle(tint: FDPDesignSystem.primary))
-                                            }
-                                            
-                                            // In-Flight Rest
-                                            VStack(alignment: .leading, spacing: 8) {
-                                                Toggle(isOn: $inFlightRest) {
-                                                    VStack(alignment: .leading, spacing: 2) {
-                                                        Text("In‑Flight Rest")
-                                                            .font(.system(.body, design: .rounded, weight: .medium))
-                                                        Text("Enable for augmented crew FDP")
-                                                            .font(.system(.caption, design: .rounded))
-                                                            .foregroundColor(FDPDesignSystem.textSecondary)
-                                                    }
-                                                }
-                                                .toggleStyle(SwitchToggleStyle(tint: FDPDesignSystem.primary))
-
-                                                if inFlightRest {
-                                                    VStack(spacing: 12) {
-                                                        VStack(alignment: .leading, spacing: 8) {
-                                                            Text("Rest Facility Class")
-                                                                .font(.system(.subheadline, design: .rounded, weight: .medium))
-                                                                .foregroundColor(FDPDesignSystem.textSecondary)
-                                                            Picker("Rest Class", selection: $restClass) {
-                                                                Text("Class 1").tag(1)
-                                                                Text("Class 2").tag(2)
-                                                                Text("Class 3").tag(3)
-                                                            }
-                                                            .pickerStyle(SegmentedPickerStyle())
-                                                            .accentColor(FDPDesignSystem.primary)
-                                                        }
-                                                        
-                                                        VStack(alignment: .leading, spacing: 8) {
-                                                            Text("Number of Pilots")
-                                                                .font(.system(.subheadline, design: .rounded, weight: .medium))
-                                                                .foregroundColor(FDPDesignSystem.textSecondary)
-                                                            Picker("Pilots", selection: $numPilots) {
-                                                                Text("3").tag(3)
-                                                                Text("4").tag(4)
-                                                            }
-                                                            .pickerStyle(SegmentedPickerStyle())
-                                                            .accentColor(FDPDesignSystem.primary)
-                                                        }
-                                                        
-                                                        if sectors > 3 {
-                                                            HStack {
-                                                                FDPIcon("exclamationmark.triangle.fill", color: FDPDesignSystem.warning, size: 16)
-                                                                Text("Augmented FDP with in-flight rest is limited to max 3 sectors.")
-                                                                    .font(.system(.caption, design: .rounded))
-                                                                    .foregroundColor(FDPDesignSystem.warning)
-                                                            }
-                                                            .padding(.horizontal, 12)
-                                                            .padding(.vertical, 8)
-                                                            .background(FDPDesignSystem.warning.opacity(0.1))
-                                                            .cornerRadius(8)
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            
-                                            // Positioning
-                                            VStack(alignment: .leading, spacing: 8) {
-                                                Toggle(isOn: $positioningBeforeDuty) {
-                                                    VStack(alignment: .leading, spacing: 2) {
-                                                        Text("Positioning Before Duty")
-                                                            .font(.system(.body, design: .rounded, weight: .medium))
-                                                        Text("Enable if you travelled before duty")
-                                                            .font(.system(.caption, design: .rounded))
-                                                            .foregroundColor(FDPDesignSystem.textSecondary)
-                                                    }
-                                                }
-                                                .toggleStyle(SwitchToggleStyle(tint: FDPDesignSystem.primary))
                                                 
-                                                if positioningBeforeDuty && Calendar.current.dateComponents([.minute], from: standbyStart, to: reportTime).minute ?? 0 > 120 {
-                                                    HStack {
-                                                        FDPIcon("exclamationmark.triangle.fill", color: FDPDesignSystem.warning, size: 16)
-                                                        Text("Positioning has significantly reduced available FDP.")
-                                                            .font(.system(.caption, design: .rounded))
-                                                            .foregroundColor(FDPDesignSystem.warning)
+                                                // In-Flight Rest
+                                                VStack(alignment: .leading, spacing: 4) {
+                                                    Toggle(isOn: $inFlightRest) {
+                                                        Text("In‑Flight Rest")
+                                                            .font(.system(.caption, design: .rounded, weight: .medium))
                                                     }
-                                                    .padding(.horizontal, 12)
-                                                    .padding(.vertical, 8)
-                                                    .background(FDPDesignSystem.warning.opacity(0.1))
-                                                    .cornerRadius(8)
+                                                    .toggleStyle(SwitchToggleStyle(tint: FDPDesignSystem.primary))
+                                                    .scaleEffect(0.9)
                                                 }
-                                            }
-                                            
-                                            // Commander's Discretion
-                                            VStack(alignment: .leading, spacing: 8) {
-                                                Toggle(isOn: $useDiscretion) {
-                                                    VStack(alignment: .leading, spacing: 2) {
-                                                        Text("Commander's Discretion")
-                                                            .font(.system(.body, design: .rounded, weight: .medium))
-                                                        Text("Adds up to 2h (or 3h with in‑flight rest)")
-                                                            .font(.system(.caption, design: .rounded))
+                                                
+                                                // Commander's Discretion
+                                                VStack(alignment: .leading, spacing: 4) {
+                                                    Toggle(isOn: $useDiscretion) {
+                                                        Text("Discretion")
+                                                            .font(.system(.caption, design: .rounded, weight: .medium))
+                                                    }
+                                                    .toggleStyle(SwitchToggleStyle(tint: FDPDesignSystem.primary))
+                                                    .scaleEffect(0.9)
+                                                }
+                                                
+                                                if inFlightRest {
+                                                    VStack(alignment: .leading, spacing: 4) {
+                                                        Text("Rest Class")
+                                                            .font(.system(.caption, design: .rounded, weight: .medium))
                                                             .foregroundColor(FDPDesignSystem.textSecondary)
+                                                        Picker("Rest Class", selection: $restClass) {
+                                                            Text("1").tag(1)
+                                                            Text("2").tag(2)
+                                                            Text("3").tag(3)
+                                                        }
+                                                        .pickerStyle(SegmentedPickerStyle())
+                                                        .accentColor(FDPDesignSystem.primary)
+                                                        .scaleEffect(0.8)
+                                                    }
+                                                    
+                                                    VStack(alignment: .leading, spacing: 4) {
+                                                        Text("Pilots")
+                                                            .font(.system(.caption, design: .rounded, weight: .medium))
+                                                            .foregroundColor(FDPDesignSystem.textSecondary)
+                                                        Picker("Pilots", selection: $numPilots) {
+                                                            Text("3").tag(3)
+                                                            Text("4").tag(4)
+                                                        }
+                                                        .pickerStyle(SegmentedPickerStyle())
+                                                        .accentColor(FDPDesignSystem.primary)
+                                                        .scaleEffect(0.8)
                                                     }
                                                 }
-                                                .toggleStyle(SwitchToggleStyle(tint: FDPDesignSystem.primary))
                                             }
                                         }
                                     }
                                 }
                             }
                             
-                            // Results Card
+                            // Results Card - Compact
                             FDPCard {
-                                VStack(alignment: .leading, spacing: 20) {
+                                VStack(spacing: 16) {
                                     HStack {
-                                        FDPIcon("chart.bar.fill", color: FDPDesignSystem.primary, size: 24)
+                                        FDPIcon("chart.bar.fill", color: FDPDesignSystem.primary, size: 20)
                                         Text("Results")
                                             .font(.system(.headline, design: .rounded, weight: .semibold))
                                             .foregroundColor(FDPDesignSystem.textPrimary)
+                                        Spacer()
                                     }
                                     
-                                    VStack(spacing: 16) {
+                                    // Compact Results Grid
+                                    LazyVGrid(columns: [
+                                        GridItem(.flexible()),
+                                        GridItem(.flexible())
+                                    ], spacing: 12) {
                                         // Max FDP
-                                        VStack(alignment: .leading, spacing: 8) {
-                                            Text("Maximum FDP")
-                                                .font(.system(.subheadline, design: .rounded, weight: .medium))
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("Max FDP")
+                                                .font(.system(.caption, design: .rounded, weight: .medium))
                                                 .foregroundColor(FDPDesignSystem.textSecondary)
                                             Text(formattedTime(minutes: calculatedFDP))
-                                                .font(.system(.title, design: .rounded, weight: .bold))
+                                                .font(.system(.title2, design: .rounded, weight: .bold))
                                                 .foregroundStyle(
                                                     LinearGradient(
                                                         colors: [FDPDesignSystem.accent, FDPDesignSystem.accent.opacity(0.8)],
@@ -892,8 +767,8 @@ struct ContentView: View {
                                                 )
                                         }
                                         .frame(maxWidth: .infinity, alignment: .leading)
-                                        .padding(.horizontal, 20)
-                                        .padding(.vertical, 16)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 12)
                                         .background(
                                             LinearGradient(
                                                 colors: [FDPDesignSystem.accent.opacity(0.1), FDPDesignSystem.accent.opacity(0.05)],
@@ -902,7 +777,7 @@ struct ContentView: View {
                                             )
                                         )
                                         .overlay(
-                                            RoundedRectangle(cornerRadius: 16)
+                                            RoundedRectangle(cornerRadius: 12)
                                                 .stroke(
                                                     LinearGradient(
                                                         colors: [FDPDesignSystem.accent.opacity(0.3), FDPDesignSystem.accent.opacity(0.1)],
@@ -912,20 +787,20 @@ struct ContentView: View {
                                                     lineWidth: 1
                                                 )
                                         )
-                                        .cornerRadius(16)
+                                        .cornerRadius(12)
                                         
                                         // Latest On Block
-                                        VStack(alignment: .leading, spacing: 8) {
-                                            Text("Latest On Block")
-                                                .font(.system(.subheadline, design: .rounded, weight: .medium))
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text("On Block")
+                                                .font(.system(.caption, design: .rounded, weight: .medium))
                                                 .foregroundColor(FDPDesignSystem.textSecondary)
                                             Text(formattedDate(date: latestOnBlock))
-                                                .font(.system(.title2, design: .rounded, weight: .semibold))
+                                                .font(.system(.title3, design: .rounded, weight: .semibold))
                                                 .foregroundColor(FDPDesignSystem.textPrimary)
                                         }
                                         .frame(maxWidth: .infinity, alignment: .leading)
-                                        .padding(.horizontal, 20)
-                                        .padding(.vertical, 16)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 12)
                                         .background(
                                             LinearGradient(
                                                 colors: [FDPDesignSystem.background, FDPDesignSystem.background.opacity(0.8)],
@@ -934,7 +809,7 @@ struct ContentView: View {
                                             )
                                         )
                                         .overlay(
-                                            RoundedRectangle(cornerRadius: 16)
+                                            RoundedRectangle(cornerRadius: 12)
                                                 .stroke(
                                                     LinearGradient(
                                                         colors: [FDPDesignSystem.border.opacity(0.5), FDPDesignSystem.border.opacity(0.2)],
@@ -944,23 +819,26 @@ struct ContentView: View {
                                                     lineWidth: 1
                                                 )
                                         )
-                                        .cornerRadius(16)
-                                        
+                                        .cornerRadius(12)
+                                    }
+                                    
+                                    // Debug Info and Reminder
+                                    VStack(spacing: 8) {
                                         if !debugSource.isEmpty {
                                             HStack {
                                                 FDPBadge(debugSource, color: FDPDesignSystem.accent)
                                                 if !debugBand.isEmpty {
                                                     FDPBadge(debugBand, color: FDPDesignSystem.secondary)
                                                 }
+                                                Spacer()
                                             }
                                         }
                                         
-                                        // Reminder Button
                                         Button("Set 1-Hour Reminder") {
                                             requestNotificationPermission { granted in
                                                 if granted { self.scheduleFDPReminderOneHourBeforeEnd() }
                                                 else {
-                                                    DispatchQueue.main.async { self.reminderStatus = "❌ Notifications are disabled. Enable in Settings." }
+                                                    DispatchQueue.main.async { self.reminderStatus = "❌ Notifications disabled" }
                                                 }
                                             }
                                         }
@@ -973,11 +851,53 @@ struct ContentView: View {
                                                 Text(reminderStatus)
                                                     .font(.system(.caption, design: .rounded))
                                                     .foregroundColor(reminderStatus.contains("✅") ? FDPDesignSystem.success : FDPDesignSystem.danger)
+                                                Spacer()
                                             }
                                             .padding(.horizontal, 12)
-                                            .padding(.vertical, 8)
+                                            .padding(.vertical, 6)
                                             .background((reminderStatus.contains("✅") ? FDPDesignSystem.success : FDPDesignSystem.danger).opacity(0.1))
                                             .cornerRadius(8)
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // Calendar Integration Card (if connected)
+                            if calendarManager.accessGranted {
+                                FDPCard {
+                                    VStack(spacing: 12) {
+                                        HStack {
+                                            FDPIcon("calendar", color: FDPDesignSystem.primary, size: 20)
+                                            Text("Calendar")
+                                                .font(.system(.headline, design: .rounded, weight: .semibold))
+                                                .foregroundColor(FDPDesignSystem.textPrimary)
+                                            Spacer()
+                                        }
+                                        
+                                        if let ev = calendarManager.nextCheckIn {
+                                            VStack(alignment: .leading, spacing: 6) {
+                                                Text("Next Check‑In")
+                                                    .font(.system(.caption, design: .rounded, weight: .medium))
+                                                    .foregroundColor(FDPDesignSystem.textSecondary)
+                                                Text("\(formattedDate(date: ev.startDate)) • \(ev.title)")
+                                                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                                                    .foregroundColor(FDPDesignSystem.textPrimary)
+                                                Button("Use as Report Time") {
+                                                    reportTime = ev.startDate
+                                                }
+                                                .font(.system(.caption, design: .rounded, weight: .medium))
+                                                .foregroundColor(FDPDesignSystem.accent)
+                                                .padding(.horizontal, 12)
+                                                .padding(.vertical, 6)
+                                                .background(FDPDesignSystem.accent.opacity(0.1))
+                                                .cornerRadius(8)
+                                            }
+                                        } else {
+                                            Button("Find Next Check‑In") {
+                                                let id: String? = selectedCalendarID.isEmpty ? nil : selectedCalendarID
+                                                calendarManager.findNextCheckIn(in: id)
+                                            }
+                                            .secondaryButtonStyle()
                                         }
                                     }
                                 }
@@ -985,7 +905,7 @@ struct ContentView: View {
                         }
                         .padding(.horizontal, 20)
                         
-                        Spacer(minLength: 100)
+                        Spacer(minLength: 20)
                     }
                 }
             }
