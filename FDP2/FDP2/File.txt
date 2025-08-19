@@ -1,0 +1,31 @@
+func requestAccess() {
+    if #available(iOS 17.0, *) {
+        // New API on iOS 17+: request full access to calendars (events)
+        store.requestFullAccessToEvents { granted, error in
+            DispatchQueue.main.async {
+                self.accessGranted = granted
+                if granted {
+                    self.loadCalendars()
+                } else {
+                    self.statusMessage = error?.localizedDescription.isEmpty == false
+                        ? "Calendar access denied: \(error!.localizedDescription)"
+                        : "Calendar access denied."
+                }
+            }
+        }
+    } else {
+        // Older iOS: legacy API
+        store.requestAccess(to: .event) { granted, error in
+            DispatchQueue.main.async {
+                self.accessGranted = granted
+                if granted {
+                    self.loadCalendars()
+                } else {
+                    self.statusMessage = error?.localizedDescription.isEmpty == false
+                        ? "Calendar access denied: \(error!.localizedDescription)"
+                        : "Calendar access denied."
+                }
+            }
+        }
+    }
+}
