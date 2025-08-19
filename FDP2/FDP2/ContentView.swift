@@ -461,22 +461,51 @@ struct ContentView: View {
                         // Header Section
                         VStack(spacing: 16) {
                             HStack {
-                                VStack(alignment: .leading, spacing: 4) {
+                                VStack(alignment: .leading, spacing: 6) {
                                     Text("FDP Calculator")
                                         .font(.system(.largeTitle, design: .rounded, weight: .bold))
-                                        .foregroundColor(.white)
+                                        .foregroundStyle(
+                                            LinearGradient(
+                                                colors: [.white, .white.opacity(0.9)],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
                                     Text("Flight Duty Period")
                                         .font(.system(.subheadline, design: .rounded, weight: .medium))
-                                        .foregroundColor(.white.opacity(0.8))
+                                        .foregroundColor(.white.opacity(0.85))
                                 }
                                 Spacer()
                                 Button(action: {}) {
                                     Image(systemName: "gearshape.fill")
                                         .font(.title2)
                                         .foregroundColor(.white)
-                                        .frame(width: 44, height: 44)
-                                        .background(.white.opacity(0.2))
+                                        .frame(width: 48, height: 48)
+                                        .background(
+                                            LinearGradient(
+                                                colors: [.white.opacity(0.25), .white.opacity(0.15)],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
+                                        .overlay(
+                                            Circle()
+                                                .stroke(
+                                                    LinearGradient(
+                                                        colors: [.white.opacity(0.4), .white.opacity(0.1)],
+                                                        startPoint: .topLeading,
+                                                        endPoint: .bottomTrailing
+                                                    ),
+                                                    lineWidth: 1
+                                                )
+                                        )
                                         .clipShape(Circle())
+                                        .shadow(
+                                            color: .black.opacity(0.2),
+                                            radius: 8,
+                                            x: 0,
+                                            y: 4
+                                        )
                                 }
                             }
                         }
@@ -589,15 +618,39 @@ struct ContentView: View {
                                             HStack {
                                                 Text("\(sectors)")
                                                     .font(.system(.title2, design: .rounded, weight: .bold))
-                                                    .foregroundColor(FDPDesignSystem.primary)
+                                                    .foregroundStyle(
+                                                        LinearGradient(
+                                                            colors: [FDPDesignSystem.accent, FDPDesignSystem.accent.opacity(0.8)],
+                                                            startPoint: .leading,
+                                                            endPoint: .trailing
+                                                        )
+                                                    )
                                                 Spacer()
                                                 Stepper("", value: $sectors, in: 1...10)
                                                     .labelsHidden()
+                                                    .accentColor(FDPDesignSystem.accent)
                                             }
-                                            .padding(.horizontal, 16)
-                                            .padding(.vertical, 12)
-                                            .background(FDPDesignSystem.background)
-                                            .cornerRadius(12)
+                                            .padding(.horizontal, 20)
+                                            .padding(.vertical, 16)
+                                            .background(
+                                                LinearGradient(
+                                                    colors: [FDPDesignSystem.background, FDPDesignSystem.background.opacity(0.8)],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
+                                                )
+                                            )
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 16)
+                                                    .stroke(
+                                                        LinearGradient(
+                                                            colors: [FDPDesignSystem.accent.opacity(0.3), FDPDesignSystem.accent.opacity(0.1)],
+                                                            startPoint: .topLeading,
+                                                            endPoint: .bottomTrailing
+                                                        ),
+                                                        lineWidth: 1
+                                                    )
+                                            )
+                                            .cornerRadius(16)
                                         }
                                         
                                         // FDP Table Source
@@ -830,13 +883,36 @@ struct ContentView: View {
                                                 .foregroundColor(FDPDesignSystem.textSecondary)
                                             Text(formattedTime(minutes: calculatedFDP))
                                                 .font(.system(.title, design: .rounded, weight: .bold))
-                                                .foregroundColor(FDPDesignSystem.primary)
+                                                .foregroundStyle(
+                                                    LinearGradient(
+                                                        colors: [FDPDesignSystem.accent, FDPDesignSystem.accent.opacity(0.8)],
+                                                        startPoint: .leading,
+                                                        endPoint: .trailing
+                                                    )
+                                                )
                                         }
                                         .frame(maxWidth: .infinity, alignment: .leading)
-                                        .padding(.horizontal, 16)
-                                        .padding(.vertical, 12)
-                                        .background(FDPDesignSystem.primary.opacity(0.1))
-                                        .cornerRadius(12)
+                                        .padding(.horizontal, 20)
+                                        .padding(.vertical, 16)
+                                        .background(
+                                            LinearGradient(
+                                                colors: [FDPDesignSystem.accent.opacity(0.1), FDPDesignSystem.accent.opacity(0.05)],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 16)
+                                                .stroke(
+                                                    LinearGradient(
+                                                        colors: [FDPDesignSystem.accent.opacity(0.3), FDPDesignSystem.accent.opacity(0.1)],
+                                                        startPoint: .topLeading,
+                                                        endPoint: .bottomTrailing
+                                                    ),
+                                                    lineWidth: 1
+                                                )
+                                        )
+                                        .cornerRadius(16)
                                         
                                         // Latest On Block
                                         VStack(alignment: .leading, spacing: 8) {
@@ -848,10 +924,27 @@ struct ContentView: View {
                                                 .foregroundColor(FDPDesignSystem.textPrimary)
                                         }
                                         .frame(maxWidth: .infinity, alignment: .leading)
-                                        .padding(.horizontal, 16)
-                                        .padding(.vertical, 12)
-                                        .background(FDPDesignSystem.background)
-                                        .cornerRadius(12)
+                                        .padding(.horizontal, 20)
+                                        .padding(.vertical, 16)
+                                        .background(
+                                            LinearGradient(
+                                                colors: [FDPDesignSystem.background, FDPDesignSystem.background.opacity(0.8)],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 16)
+                                                .stroke(
+                                                    LinearGradient(
+                                                        colors: [FDPDesignSystem.border.opacity(0.5), FDPDesignSystem.border.opacity(0.2)],
+                                                        startPoint: .topLeading,
+                                                        endPoint: .bottomTrailing
+                                                    ),
+                                                    lineWidth: 1
+                                                )
+                                        )
+                                        .cornerRadius(16)
                                         
                                         if !debugSource.isEmpty {
                                             HStack {

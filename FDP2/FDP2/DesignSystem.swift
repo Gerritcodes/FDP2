@@ -2,54 +2,103 @@ import SwiftUI
 
 // MARK: - Design System
 struct FDPDesignSystem {
-    // MARK: - Colors
+    // MARK: - Gradients
     static let primaryGradient = LinearGradient(
-        colors: [Color(hex: "1E3A8A"), Color(hex: "3B82F6")],
+        colors: [
+            Color(hex: "0F172A"),  // Deep navy
+            Color(hex: "1E293B"),  // Slate 800
+            Color(hex: "334155"),  // Slate 700
+            Color(hex: "475569")   // Slate 600
+        ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
     
     static let secondaryGradient = LinearGradient(
-        colors: [Color(hex: "F8FAFC"), Color(hex: "E2E8F0")],
+        colors: [
+            Color(hex: "F8FAFC"),  // Slate 50
+            Color(hex: "F1F5F9"),  // Slate 100
+            Color(hex: "E2E8F0")   // Slate 200
+        ],
         startPoint: .top,
         endPoint: .bottom
     )
     
     static let accentGradient = LinearGradient(
-        colors: [Color(hex: "10B981"), Color(hex: "059669")],
+        colors: [
+            Color(hex: "0EA5E9"),  // Sky 500
+            Color(hex: "0284C7"),  // Sky 600
+            Color(hex: "0369A1")   // Sky 700
+        ],
+        startPoint: .leading,
+        endPoint: .trailing
+    )
+    
+    static let successGradient = LinearGradient(
+        colors: [
+            Color(hex: "10B981"),  // Emerald 500
+            Color(hex: "059669"),  // Emerald 600
+            Color(hex: "047857")   // Emerald 700
+        ],
         startPoint: .leading,
         endPoint: .trailing
     )
     
     static let warningGradient = LinearGradient(
-        colors: [Color(hex: "F59E0B"), Color(hex: "D97706")],
+        colors: [
+            Color(hex: "F59E0B"),  // Amber 500
+            Color(hex: "D97706"),  // Amber 600
+            Color(hex: "B45309")   // Amber 700
+        ],
         startPoint: .leading,
         endPoint: .trailing
     )
     
     static let dangerGradient = LinearGradient(
-        colors: [Color(hex: "EF4444"), Color(hex: "DC2626")],
+        colors: [
+            Color(hex: "EF4444"),  // Red 500
+            Color(hex: "DC2626"),  // Red 600
+            Color(hex: "B91C1C")   // Red 700
+        ],
         startPoint: .leading,
         endPoint: .trailing
     )
     
+    static let cardGradient = LinearGradient(
+        colors: [
+            Color.white.opacity(0.95),
+            Color.white.opacity(0.85)
+        ],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+    
+    static let glassGradient = LinearGradient(
+        colors: [
+            Color.white.opacity(0.25),
+            Color.white.opacity(0.1)
+        ],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+    
     // MARK: - Colors
-    static let primary = Color(hex: "1E3A8A")
-    static let secondary = Color(hex: "64748B")
-    static let accent = Color(hex: "10B981")
-    static let background = Color(hex: "F8FAFC")
+    static let primary = Color(hex: "0F172A")      // Deep navy
+    static let secondary = Color(hex: "475569")    // Slate 600
+    static let accent = Color(hex: "0EA5E9")       // Sky 500
+    static let background = Color(hex: "F8FAFC")   // Slate 50
     static let surface = Color.white
-    static let textPrimary = Color(hex: "1E293B")
-    static let textSecondary = Color(hex: "64748B")
-    static let border = Color(hex: "E2E8F0")
-    static let success = Color(hex: "10B981")
-    static let warning = Color(hex: "F59E0B")
-    static let danger = Color(hex: "EF4444")
+    static let textPrimary = Color(hex: "0F172A")  // Slate 900
+    static let textSecondary = Color(hex: "475569") // Slate 600
+    static let border = Color(hex: "E2E8F0")       // Slate 200
+    static let success = Color(hex: "10B981")      // Emerald 500
+    static let warning = Color(hex: "F59E0B")      // Amber 500
+    static let danger = Color(hex: "EF4444")       // Red 500
     
     // MARK: - Shadows
-    static let shadowSmall = Shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
-    static let shadowMedium = Shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 4)
-    static let shadowLarge = Shadow(color: .black.opacity(0.15), radius: 16, x: 0, y: 8)
+    static let shadowSmall = Shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
+    static let shadowMedium = Shadow(color: .black.opacity(0.12), radius: 12, x: 0, y: 6)
+    static let shadowLarge = Shadow(color: .black.opacity(0.18), radius: 20, x: 0, y: 10)
 }
 
 // MARK: - Shadow Helper
@@ -91,8 +140,19 @@ extension Color {
 struct CardStyle: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .background(FDPDesignSystem.surface)
-            .cornerRadius(16)
+            .background(FDPDesignSystem.cardGradient)
+            .cornerRadius(20)
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(
+                        LinearGradient(
+                            colors: [.white.opacity(0.3), .white.opacity(0.1)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
+            )
             .shadow(
                 color: FDPDesignSystem.shadowMedium.color,
                 radius: FDPDesignSystem.shadowMedium.radius,
@@ -105,11 +165,24 @@ struct CardStyle: ViewModifier {
 struct GlassmorphismStyle: ViewModifier {
     func body(content: Content) -> some View {
         content
-            .background(.ultraThinMaterial)
-            .cornerRadius(20)
+            .background(FDPDesignSystem.glassGradient)
+            .cornerRadius(24)
             .overlay(
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(.white.opacity(0.2), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 24)
+                    .stroke(
+                        LinearGradient(
+                            colors: [.white.opacity(0.4), .white.opacity(0.1)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1.5
+                    )
+            )
+            .shadow(
+                color: FDPDesignSystem.shadowLarge.color,
+                radius: FDPDesignSystem.shadowLarge.radius,
+                x: FDPDesignSystem.shadowLarge.x,
+                y: FDPDesignSystem.shadowLarge.y
             )
     }
 }
@@ -119,15 +192,32 @@ struct PrimaryButtonStyle: ButtonStyle {
         configuration.label
             .font(.system(.body, design: .rounded, weight: .semibold))
             .foregroundColor(.white)
-            .padding(.horizontal, 24)
-            .padding(.vertical, 12)
+            .padding(.horizontal, 28)
+            .padding(.vertical, 14)
             .background(
-                FDPDesignSystem.primaryGradient
+                FDPDesignSystem.accentGradient
                     .opacity(configuration.isPressed ? 0.8 : 1.0)
             )
-            .cornerRadius(12)
+            .cornerRadius(16)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(
+                        LinearGradient(
+                            colors: [.white.opacity(0.3), .white.opacity(0.1)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
+            )
+            .shadow(
+                color: FDPDesignSystem.shadowSmall.color,
+                radius: FDPDesignSystem.shadowSmall.radius,
+                x: FDPDesignSystem.shadowSmall.x,
+                y: FDPDesignSystem.shadowSmall.y
+            )
             .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
-            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
     }
 }
 
@@ -135,20 +225,33 @@ struct SecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(.body, design: .rounded, weight: .medium))
-            .foregroundColor(FDPDesignSystem.primary)
-            .padding(.horizontal, 20)
-            .padding(.vertical, 10)
+            .foregroundColor(FDPDesignSystem.accent)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 12)
             .background(
-                FDPDesignSystem.surface
+                FDPDesignSystem.cardGradient
                     .opacity(configuration.isPressed ? 0.8 : 1.0)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(FDPDesignSystem.primary.opacity(0.3), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(
+                        LinearGradient(
+                            colors: [FDPDesignSystem.accent.opacity(0.4), FDPDesignSystem.accent.opacity(0.2)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1.5
+                    )
             )
-            .cornerRadius(10)
+            .cornerRadius(14)
+            .shadow(
+                color: FDPDesignSystem.shadowSmall.color,
+                radius: FDPDesignSystem.shadowSmall.radius,
+                x: FDPDesignSystem.shadowSmall.x,
+                y: FDPDesignSystem.shadowSmall.y
+            )
             .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
-            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+            .animation(.easeInOut(duration: 0.15), value: configuration.isPressed)
     }
 }
 
@@ -180,10 +283,33 @@ struct FDPBadge: View {
         Text(text)
             .font(.system(.caption, design: .rounded, weight: .semibold))
             .foregroundColor(.white)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(color)
-            .cornerRadius(8)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(
+                LinearGradient(
+                    colors: [color, color.opacity(0.8)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(
+                        LinearGradient(
+                            colors: [.white.opacity(0.3), .white.opacity(0.1)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
+            )
+            .shadow(
+                color: color.opacity(0.3),
+                radius: 4,
+                x: 0,
+                y: 2
+            )
     }
 }
 
